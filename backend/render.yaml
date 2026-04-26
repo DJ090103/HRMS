@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: hrms-backend-api
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npm run prisma:generate && npm run build
+    startCommand: npm run start
+    autoDeploy: true
+  - type: worker
+    name: hrms-backend-worker
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npm run prisma:generate && npm run build
+    startCommand: npm run worker
+    autoDeploy: true
+  - type: worker
+    name: hrms-backend-cron
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npm run prisma:generate && npm run build
+    startCommand: npm run cron
+    autoDeploy: true

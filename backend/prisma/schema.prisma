@@ -1,0 +1,456 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  HR_MANAGER
+  EMPLOYEE
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  HOLIDAY
+  LEAVE
+}
+
+enum WfhRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum PayrollStatus {
+  DRAFT
+  APPROVED
+  DISBURSED
+  FAILED
+}
+
+enum ReimbursementStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model Company {
+  id            String             @id @default(cuid())
+  name          String
+  domain        String?            @unique
+  timezone      String             @default("Asia/Kolkata")
+  currency      String             @default("INR")
+  settings      Json?
+  users         User[]
+  departments   Department[]
+  leaveRequests LeaveRequest[]
+  payrollRuns   PayrollRun[]
+  holidays      Holiday[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+model User {
+  id                  String                @id @default(cuid())
+  companyId           String
+  company             Company               @relation(fields: [companyId], references: [id])
+  email               String
+  passwordHash        String
+  role                Role
+  firstName           String
+  lastName            String
+  profileImageUrl     String?
+  isActive            Boolean               @default(true)
+  isEmailVerified     Boolean               @default(false)
+  twoFactorEnabled    Boolean               @default(false)
+  rolePermissions     RolePermission[]
+  employeeProfile     EmployeeProfile?
+  sessions            DeviceSession[]
+  loginHistory        LoginHistory[]
+  attendanceRecords   Attendance[]
+  wfhRequests         WfhRequest[]          @relation("WfhRequester")
+  wfhApprovals        WfhRequest[]          @relation("WfhApprover")
+  leaveRequests       LeaveRequest[]        @relation("Requester")
+  leaveApprovals      LeaveRequest[]        @relation("Approver")
+  reimbursements      Reimbursement[]       @relation("Submitter")
+  reimbursementReview Reimbursement[]       @relation("ReimbursementApprover")
+  notifications       Notification[]
+  reviewsGiven        PerformanceReview[]   @relation("Reviewer")
+  reviewsReceived     PerformanceReview[]   @relation("Reviewee")
+  auditLogs           AuditLog[]
+  assets              Asset[]               @relation("AssetHolder")
+  raisedTickets       HelpdeskTicket[]      @relation("TicketCreator")
+  handledTickets      HelpdeskTicket[]      @relation("TicketAssignee")
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  @@unique([companyId, email])
+}
+
+model RolePermission {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, permission])
+}
+
+model DeviceSession {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken String
+  ipAddress    String?
+  userAgent    String?
+  isRevoked    Boolean  @default(false)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+}
+
+model LoginHistory {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress  String?
+  userAgent  String?
+  success    Boolean
+  reason     String?
+  createdAt  DateTime @default(now())
+}
+
+model OtpToken {
+  id         String   @id @default(cuid())
+  email      String
+  companyId  String
+  purpose    String
+  otpHash    String
+  expiresAt  DateTime
+  attempts   Int      @default(0)
+  isUsed     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([email, purpose])
+}
+
+model Department {
+  id            String            @id @default(cuid())
+  companyId     String
+  company       Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  employees     EmployeeProfile[]
+  openings      RecruitmentOpening[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@unique([companyId, name])
+}
+
+model EmployeeProfile {
+  id                  String          @id @default(cuid())
+  userId              String          @unique
+  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeCode        String          @unique
+  departmentId        String?
+  department          Department?     @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  joiningDate         DateTime
+  designation         String
+  workMode            String?
+  baseCtc             Decimal         @db.Decimal(12, 2)
+  basicPercent        Decimal         @db.Decimal(5, 2)
+  hraPercent          Decimal         @db.Decimal(5, 2)
+  allowancesMonthly   Decimal         @default(0) @db.Decimal(12, 2)
+  pfEnabled           Boolean         @default(true)
+  esiEnabled          Boolean         @default(false)
+  professionalTax     Decimal         @default(0) @db.Decimal(10, 2)
+  bankAccountNumber   String?
+  bankIfsc            String?
+  bankName            String?
+  bankAccountHolderName String?
+  uanNumber           String?
+  emergencyContact    String?
+  payrollLineItems    PayrollLineItem[]
+  reimbursements      Reimbursement[]
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+}
+
+model Attendance {
+  id                String           @id @default(cuid())
+  companyId         String
+  userId            String
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date              DateTime
+  punchInAt         DateTime?
+  punchOutAt        DateTime?
+  status            AttendanceStatus @default(PRESENT)
+  isLate            Boolean          @default(false)
+  overtimeMinutes   Int              @default(0)
+  shiftStartMinutes Int              @default(540)
+  shiftEndMinutes   Int              @default(1080)
+  note              String?
+  approvedBy        String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@unique([userId, date])
+  @@index([companyId, date])
+}
+
+model WfhRequest {
+  id            String           @id @default(cuid())
+  companyId     String
+  requesterId   String
+  requester     User             @relation("WfhRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  weekStart     DateTime
+  requestedDates Json
+  reason        String?
+  status        WfhRequestStatus @default(PENDING)
+  reviewedById  String?
+  reviewedBy    User?            @relation("WfhApprover", fields: [reviewedById], references: [id], onDelete: SetNull)
+  rejectionNote String?
+  reviewedAt    DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@unique([requesterId, weekStart])
+  @@index([companyId, weekStart, status])
+}
+
+model LeaveRequest {
+  id             String      @id @default(cuid())
+  companyId      String
+  company        Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  requesterId    String
+  requester      User        @relation("Requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  approverId     String?
+  approver       User?       @relation("Approver", fields: [approverId], references: [id])
+  type           String
+  reason         String?
+  startDate      DateTime
+  endDate        DateTime
+  dayCount       Decimal     @db.Decimal(5, 2)
+  status         LeaveStatus @default(PENDING)
+  rejectionNote  String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([companyId, status])
+}
+
+model PayrollRun {
+  id                String         @id @default(cuid())
+  companyId         String
+  company           Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  month             Int
+  year              Int
+  status            PayrollStatus  @default(DRAFT)
+  approvedBy        String?
+  approvedAt        DateTime?
+  processedAt       DateTime?
+  totalGross        Decimal        @default(0) @db.Decimal(14, 2)
+  totalNet          Decimal        @default(0) @db.Decimal(14, 2)
+  totalDeductions   Decimal        @default(0) @db.Decimal(14, 2)
+  paymentBatchRef   String?
+  lineItems         PayrollLineItem[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@unique([companyId, month, year])
+}
+
+model PayrollLineItem {
+  id                      String          @id @default(cuid())
+  payrollRunId            String
+  payrollRun              PayrollRun      @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  employeeProfileId       String
+  employeeProfile         EmployeeProfile @relation(fields: [employeeProfileId], references: [id], onDelete: Cascade)
+  workingDays             Int
+  presentDays             Decimal         @db.Decimal(6, 2)
+  paidLeaveDays           Decimal         @db.Decimal(6, 2)
+  overtimeHours           Decimal         @default(0) @db.Decimal(6, 2)
+  grossAmount             Decimal         @db.Decimal(12, 2)
+  deductionAmount         Decimal         @db.Decimal(12, 2)
+  reimbursementAmount     Decimal         @default(0) @db.Decimal(12, 2)
+  netAmount               Decimal         @db.Decimal(12, 2)
+  pfDeduction             Decimal         @default(0) @db.Decimal(12, 2)
+  esiDeduction            Decimal         @default(0) @db.Decimal(12, 2)
+  professionalTaxDeduction Decimal       @default(0) @db.Decimal(12, 2)
+  lateDeduction           Decimal         @default(0) @db.Decimal(12, 2)
+  leaveDeduction          Decimal         @default(0) @db.Decimal(12, 2)
+  slipUrl                 String?
+  disbursementStatus      String          @default("PENDING")
+  createdAt               DateTime        @default(now())
+}
+
+model Reimbursement {
+  id             String              @id @default(cuid())
+  companyId      String
+  employeeId     String
+  employee       EmployeeProfile     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  submittedById  String
+  submittedBy    User                @relation("Submitter", fields: [submittedById], references: [id], onDelete: Cascade)
+  approvedById   String?
+  approvedBy     User?               @relation("ReimbursementApprover", fields: [approvedById], references: [id])
+  title          String
+  category       String
+  amount         Decimal             @db.Decimal(12, 2)
+  proofUrl       String?
+  notes          String?
+  status         ReimbursementStatus @default(PENDING)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([companyId, status])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  channel   String
+  isRead    Boolean  @default(false)
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  companyId   String
+  actorId     String?
+  actor       User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  module      String
+  action      String
+  entityId    String?
+  payload     Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([companyId, module, createdAt])
+}
+
+model Holiday {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name        String
+  date        DateTime
+  isOptional  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model PerformanceReview {
+  id          String   @id @default(cuid())
+  companyId   String
+  revieweeId  String
+  reviewee    User     @relation("Reviewee", fields: [revieweeId], references: [id], onDelete: Cascade)
+  reviewerId  String
+  reviewer    User     @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  period      String
+  rating      Decimal  @db.Decimal(3, 2)
+  comments    String?
+  createdAt   DateTime @default(now())
+}
+
+model Reward {
+  id          String   @id @default(cuid())
+  companyId   String
+  userId      String
+  points      Int
+  reason      String
+  createdAt   DateTime @default(now())
+}
+
+model HelpdeskTicket {
+  id           String       @id @default(cuid())
+  companyId    String
+  createdById  String
+  createdBy    User         @relation("TicketCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  assignedToId String?
+  assignedTo   User?        @relation("TicketAssignee", fields: [assignedToId], references: [id])
+  title        String
+  description  String
+  status       TicketStatus @default(OPEN)
+  priority     String       @default("MEDIUM")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Asset {
+  id          String   @id @default(cuid())
+  companyId   String
+  userId      String?
+  holder      User?    @relation("AssetHolder", fields: [userId], references: [id], onDelete: SetNull)
+  name        String
+  serialNo    String
+  status      String   @default("AVAILABLE")
+  createdAt   DateTime @default(now())
+
+  @@unique([companyId, serialNo])
+}
+
+model RecruitmentOpening {
+  id            String      @id @default(cuid())
+  companyId     String
+  departmentId  String?
+  department    Department? @relation(fields: [departmentId], references: [id])
+  title         String
+  employmentType String
+  minExperience Int
+  maxExperience Int
+  status        String      @default("OPEN")
+  candidates    Candidate[]
+  createdAt     DateTime    @default(now())
+}
+
+model Candidate {
+  id          String             @id @default(cuid())
+  openingId   String
+  opening     RecruitmentOpening @relation(fields: [openingId], references: [id], onDelete: Cascade)
+  name        String
+  email       String
+  phone       String?
+  stage       String             @default("APPLIED")
+  resumeUrl   String?
+  createdAt   DateTime           @default(now())
+}
+
+model PaymentTransaction {
+  id              String   @id @default(cuid())
+  companyId       String
+  payrollRunId    String?
+  provider        String
+  providerRef     String?
+  amount          Decimal  @db.Decimal(12, 2)
+  currency        String   @default("INR")
+  status          String
+  failureReason   String?
+  payload         Json?
+  createdAt       DateTime @default(now())
+}
