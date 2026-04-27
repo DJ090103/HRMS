@@ -62,6 +62,21 @@ reimbursementRouter.post(
 );
 
 reimbursementRouter.get(
+  "/pending",
+  allowPermissions("reimbursement:approve"),
+  asyncHandler(async (req, res) => {
+    const data = await prisma.reimbursement.findMany({
+      where: { companyId: req.user!.companyId, status: "PENDING" },
+      include: {
+        submittedBy: { select: { firstName: true, lastName: true, email: true } }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+    res.json({ success: true, data });
+  })
+);
+
+reimbursementRouter.get(
   "/mine",
   allowPermissions("self:reimbursement"),
   asyncHandler(async (req, res) => {

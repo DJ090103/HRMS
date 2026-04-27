@@ -55,6 +55,21 @@ leaveRouter.post(
 );
 
 leaveRouter.get(
+  "/pending",
+  allowPermissions("leave:approve"),
+  asyncHandler(async (req, res) => {
+    const data = await prisma.leaveRequest.findMany({
+      where: { companyId: req.user!.companyId, status: "PENDING" },
+      include: {
+        requester: { select: { firstName: true, lastName: true, email: true } }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+    res.json({ success: true, data });
+  })
+);
+
+leaveRouter.get(
   "/mine",
   allowPermissions("self:leave"),
   asyncHandler(async (req, res) => {
