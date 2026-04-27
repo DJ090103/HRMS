@@ -18,6 +18,9 @@ import AdminDepartmentsPage from "@/pages/modules/AdminDepartmentsPage";
 import AttendanceAnalyticsPage from "@/pages/modules/AttendanceAnalyticsPage";
 import EmployeeAttendancePage from "@/pages/modules/EmployeeAttendancePage";
 import ProfilePage from "@/pages/modules/ProfilePage";
+import LeaveRequestsPage from "@/pages/modules/LeaveRequestsPage";
+import ReimbursementsPage from "@/pages/modules/ReimbursementsPage";
+import PayslipCenterPage from "@/pages/modules/PayslipCenterPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -75,6 +78,30 @@ const App = () => (
               }
             />
             <Route
+              path="/dashboard/admin/leave-approvals"
+              element={
+                <ProtectedRoute allow={["admin"]}>
+                  <LeaveRequestsPage role="admin" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/admin/reimbursements"
+              element={
+                <ProtectedRoute allow={["admin"]}>
+                  <ReimbursementsPage role="admin" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/admin/payroll"
+              element={
+                <ProtectedRoute allow={["admin"]}>
+                  <PayslipCenterPage role="admin" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/dashboard/admin/profile"
               element={
                 <ProtectedRoute allow={["admin"]}>
@@ -116,6 +143,22 @@ const App = () => (
               }
             />
             <Route
+              path="/dashboard/hr/leave-approvals"
+              element={
+                <ProtectedRoute allow={["hr"]}>
+                  <LeaveRequestsPage role="hr" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/hr/payroll"
+              element={
+                <ProtectedRoute allow={["hr"]}>
+                  <PayslipCenterPage role="hr" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/dashboard/hr/profile"
               element={
                 <ProtectedRoute allow={["hr"]}>
@@ -145,6 +188,30 @@ const App = () => (
               element={
                 <ProtectedRoute allow={["employee"]}>
                   <EmployeeAttendancePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/employee/leave"
+              element={
+                <ProtectedRoute allow={["employee"]}>
+                  <LeaveRequestsPage role="employee" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/employee/reimbursements"
+              element={
+                <ProtectedRoute allow={["employee"]}>
+                  <ReimbursementsPage role="employee" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/employee/salary"
+              element={
+                <ProtectedRoute allow={["employee"]}>
+                  <PayslipCenterPage role="employee" />
                 </ProtectedRoute>
               }
             />
