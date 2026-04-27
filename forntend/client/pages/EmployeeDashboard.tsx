@@ -16,6 +16,7 @@ interface Notification {
   title: string;
   body: string;
   isRead: boolean;
+  metadata?: { type?: string };
 }
 
 export default function EmployeeDashboard() {
@@ -57,7 +58,12 @@ export default function EmployeeDashboard() {
           <div className="mt-4 space-y-3">
             {(notificationQuery.data?.data || []).slice(0, 8).map((item) => (
               <div key={item.id} className="rounded-lg border border-border p-3">
-                <p className="font-medium">{item.title}</p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-medium">{item.title}</p>
+                  {item.metadata?.type === "NOTICE" && (
+                    <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Notice</span>
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground mt-1">{item.body}</p>
               </div>
             ))}

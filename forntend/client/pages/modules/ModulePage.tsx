@@ -36,8 +36,6 @@ const endpointByModule = (moduleName: string): string | null => {
       return "/recruitment/openings";
     case "performance":
       return "/performance/reviews";
-    case "helpdesk":
-      return "/helpdesk/tickets";
     case "profile":
       return "/users/me";
     default:

@@ -39,6 +39,7 @@ export default function Sidebar({ role }: SidebarProps) {
     { label: "Payroll", icon: DollarSign, path: "/dashboard/admin/payroll" },
     { label: "Recruitment", icon: Briefcase, path: "/dashboard/admin/recruitment" },
     { label: "Reports", icon: BarChart3, path: "/dashboard/admin/reports" },
+    { label: "Notices", icon: FileText, path: "/dashboard/admin/notices" },
     { label: "Reimbursements", icon: AlertCircle, path: "/dashboard/admin/reimbursements" },
     { label: "Settings", icon: Settings, path: "/dashboard/admin/settings" }
   ];
@@ -51,7 +52,8 @@ export default function Sidebar({ role }: SidebarProps) {
     { label: "Departments", icon: Briefcase, path: "/dashboard/hr/departments" },
     { label: "Performance", icon: BarChart3, path: "/dashboard/hr/performance" },
     { label: "Recruitment", icon: Users, path: "/dashboard/hr/recruitment" },
-    { label: "Reports", icon: FileText, path: "/dashboard/hr/reports" }
+    { label: "Reports", icon: FileText, path: "/dashboard/hr/reports" },
+    { label: "Notices", icon: FileText, path: "/dashboard/hr/notices" }
   ];
 
   const employeeMenu = [
@@ -60,7 +62,6 @@ export default function Sidebar({ role }: SidebarProps) {
     { label: "Leave", icon: CheckSquare, path: "/dashboard/employee/leave" },
     { label: "Salary Slips", icon: DollarSign, path: "/dashboard/employee/salary" },
     { label: "Reimbursements", icon: AlertCircle, path: "/dashboard/employee/reimbursements" },
-    { label: "Help Desk", icon: Briefcase, path: "/dashboard/employee/helpdesk" },
     { label: "Profile", icon: Users, path: "/dashboard/employee/profile" }
   ];
 

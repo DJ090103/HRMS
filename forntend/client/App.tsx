@@ -21,6 +21,7 @@ import ProfilePage from "@/pages/modules/ProfilePage";
 import LeaveRequestsPage from "@/pages/modules/LeaveRequestsPage";
 import ReimbursementsPage from "@/pages/modules/ReimbursementsPage";
 import PayslipCenterPage from "@/pages/modules/PayslipCenterPage";
+import AdminNoticesPage from "@/pages/modules/AdminNoticesPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -102,6 +103,14 @@ const App = () => (
               }
             />
             <Route
+              path="/dashboard/admin/notices"
+              element={
+                <ProtectedRoute allow={["admin"]}>
+                  <AdminNoticesPage role="admin" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/dashboard/admin/profile"
               element={
                 <ProtectedRoute allow={["admin"]}>
@@ -155,6 +164,14 @@ const App = () => (
               element={
                 <ProtectedRoute allow={["hr"]}>
                   <PayslipCenterPage role="hr" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/hr/notices"
+              element={
+                <ProtectedRoute allow={["hr"]}>
+                  <AdminNoticesPage role="hr" />
                 </ProtectedRoute>
               }
             />

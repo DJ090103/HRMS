@@ -15,6 +15,7 @@ interface Notification {
   title: string;
   body: string;
   isRead: boolean;
+  metadata?: { type?: string };
 }
 
 export default function Navbar({ role }: NavbarProps) {
@@ -81,7 +82,12 @@ export default function Navbar({ role }: NavbarProps) {
                 <div className="max-h-96 overflow-y-auto">
                   {(notifications.data?.data || []).slice(0, 8).map((item) => (
                     <button key={item.id} className="w-full px-4 py-3 border-b border-border/50 hover:bg-muted transition-colors text-left">
-                      <p className="text-sm font-medium line-clamp-1">{item.title}</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium line-clamp-1">{item.title}</p>
+                        {item.metadata?.type === "NOTICE" && (
+                          <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">Notice</span>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.body}</p>
                     </button>
                   ))}

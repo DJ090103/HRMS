@@ -48,13 +48,6 @@ enum ReimbursementStatus {
   PAID
 }
 
-enum TicketStatus {
-  OPEN
-  IN_PROGRESS
-  RESOLVED
-  CLOSED
-}
-
 model Company {
   id            String             @id @default(cuid())
   name          String
@@ -100,8 +93,6 @@ model User {
   reviewsReceived     PerformanceReview[]   @relation("Reviewee")
   auditLogs           AuditLog[]
   assets              Asset[]               @relation("AssetHolder")
-  raisedTickets       HelpdeskTicket[]      @relation("TicketCreator")
-  handledTickets      HelpdeskTicket[]      @relation("TicketAssignee")
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 
@@ -385,21 +376,6 @@ model Reward {
   points      Int
   reason      String
   createdAt   DateTime @default(now())
-}
-
-model HelpdeskTicket {
-  id           String       @id @default(cuid())
-  companyId    String
-  createdById  String
-  createdBy    User         @relation("TicketCreator", fields: [createdById], references: [id], onDelete: Cascade)
-  assignedToId String?
-  assignedTo   User?        @relation("TicketAssignee", fields: [assignedToId], references: [id])
-  title        String
-  description  String
-  status       TicketStatus @default(OPEN)
-  priority     String       @default("MEDIUM")
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
 }
 
 model Asset {
